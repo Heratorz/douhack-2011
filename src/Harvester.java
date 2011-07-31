@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,6 +18,8 @@ public class Harvester extends FlyObject
    public static final int priceWood = 5;
    BufferedImage bgImage;
    
+   private BufferedImage image;
+   
    public Harvester(Pt P, int Side, int Id, Planet home) {
       super(P, Side, 4, Id);
       cargoGold = cargoWood = 0;
@@ -28,9 +31,8 @@ public class Harvester extends FlyObject
 
    @Override
 	public void paint(Graphics2D g2) {
-	   g2.drawImage(bgImage, WC.LX+p.x*WC.SZ, WC.LY+p.y*WC.SZ, size*WC.SZ, size*WC.SZ, null);
-	   drawSelection(g2);
-	   drawInfo(g2);
+	      g2.drawImage(bgImage, WC.LX+p.x*WC.SZ, WC.LY+p.y*WC.SZ, size*WC.SZ, size*WC.SZ, null);
+        	drawInfo(g2);
 	} 
 
    public String toString() {
@@ -60,8 +62,24 @@ public class Harvester extends FlyObject
    private void goMine() {
       if (targetMine == null) return;
       if (this.touchObject(targetMine)) {
-         cargoGold += 10;
-         cargoWood += 10;
+    	 if(targetMine.type == SourceType.GOLD)
+    	 {
+    		 if (targetMine.amount <= 0)
+    			 return;
+    		 else if(targetMine.amount - WC.HarvCanTakeGold < 0)
+    			 cargoGold += targetMine.amount - WC.HarvCanTakeGold;
+    		 else
+    			 cargoGold += WC.HarvCanTakeGold;
+    	 }
+    	 else
+    	 {
+    		 if (targetMine.amount <= 0)
+    			 return;
+    		 else if(targetMine.amount - WC.HarvCanTakeWood < 0)
+    			 cargoWood += targetMine.amount - WC.HarvCanTakeWood;
+    		 else
+    			 cargoWood += WC.HarvCanTakeWood;
+    	 }
          //JOptionPane.showMessageDialog(null, "Harvester found resources!");
       }
       else {

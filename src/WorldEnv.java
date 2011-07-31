@@ -1,6 +1,9 @@
 import java.util.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 /**
@@ -21,7 +24,11 @@ public class WorldEnv
    FlyObject selected;
    int idCounter;
    
+   private BufferedImage selection;
+   
    public WorldEnv() {
+	  selection = null;
+	  
       all = new LinkedList<FlyObject>();
       planets = new LinkedList<Planet>();
       sources = new LinkedList<Source>();
@@ -31,7 +38,12 @@ public class WorldEnv
       for (int i = 0; i < WC.N; i++)
          for (int j = 0; j < WC.M; j++)
             randomPoints.add(new Pt(i, j));
-      generateWorld();
+      if (!generateWorld())
+         KissMyAsser.errorFound();
+      try {
+		  selection = ImageIO.read(new File("img/selection.gif"));
+   	  }
+	  catch (Exception e) { e.printStackTrace(); KissMyAsser.errorFound(); }
    }
    
    public void buildHarvester() {
@@ -144,18 +156,21 @@ public class WorldEnv
    }
    
    public void drawWorld(Graphics2D g2) {
-      for (FlyObject fo : all)
+      for (FlyObject fo : all) {
          fo.paint(g2);
+    	 if (fo.selected)
+    		 g2.drawImage(selection, WC.LX+fo.p.x*WC.SZ-WC.SZ*3/2, WC.LY+fo.p.y*WC.SZ-WC.SZ*3/2, (fo.size+3)*WC.SZ, (fo.size+3)*WC.SZ, null);
+      }
       g2.setColor(Color.BLACK);
       // Blue player (#1)
-      g2.setFont(new Font("SansSerif", Font.PLAIN, 22));
-      g2.drawString("[ Blue player ]", WC.LX+WC.W+20, 320);
+      g2.setFont(new Font("SansSerif", Font.PLAIN, 20));
+      g2.drawString("[ Blue player ]", WC.LX+WC.W+20, 280);
       g2.setFont(new Font("SansSerif", Font.PLAIN, 18));
-      g2.drawString("Gold: " + gold1, WC.LX+WC.W+35, 350);
-      g2.drawString("Wood: " + wood1, WC.LX+WC.W+35, 375);
+      g2.drawString("Gold: " + gold1, WC.LX+WC.W+35, 310);
+      g2.drawString("Wood: " + wood1, WC.LX+WC.W+35, 335);
       // Red player (#2)
-      g2.setFont(new Font("SansSerif", Font.PLAIN, 22));
-      g2.drawString("[ Red player ]", WC.LX+WC.W+20, 420);
+      g2.setFont(new Font("SansSerif", Font.PLAIN, 20));
+      g2.drawString("[ Red player ]", WC.LX+WC.W+20, 380);
       g2.setFont(new Font("SansSerif", Font.PLAIN, 18));
       g2.drawString("Gold: " + gold2, WC.LX+WC.W+35, 450);
       g2.drawString("Wood: " + wood2, WC.LX+WC.W+35, 475);
@@ -164,19 +179,19 @@ public class WorldEnv
    public void generateWorld() {
       // Probability for continue is about 0
       Gen: for ( ;; ) {
-         idCounter = 0;
-         all.clear();
-         planets.clear();
-         sources.clear();
-         harvesters.clear();
-         fighters.clear();
-         gold1 = gold2 = wood1 = wood2 = 50;
-         Utils.randomShuffle(randomPoints);
+      idCounter = 0;
+      all.clear();
+      planets.clear();
+      sources.clear();
+      harvesters.clear();
+      fighters.clear();
+      gold1 = gold2 = wood1 = wood2 = 50;
+      Utils.randomShuffle(randomPoints);
          if (!generatePlanet(0, 14)) continue Gen;
          if (!generatePlanet(1, 14)) continue Gen;
-         for (int i = 0; i < 4; i++)
+      for (int i = 0; i < 4; i++)
             if (!generateSource()) continue Gen;
-         selected = null;
+      selected = null;
          break;
       }
    }
@@ -198,13 +213,14 @@ public class WorldEnv
       return false;
    }
    
-   public boolean generateSource() {
+   public boolean generateSource(SourceType type) {
       final int mn = 10, mx = 20, closest = 10;
       int size = mn + randomizer.nextInt(mx-mn+1);
       size -= size&1;
       Pt p = getPossiblePlace(size, closest);
       if (p != null) {
-         Source cur = new Source(p, size, idCounter++);
+    	 int rnd = (new Random()).nextInt(1);
+         Source cur = new Source(p, size, idCounter++, type, type == SourceType.GOLD ? WC.RGold * size : WC.RWood * size);
          all.add(cur);
          sources.add(cur);
          //System.out.println("Source generated: " + cur.p.toString());

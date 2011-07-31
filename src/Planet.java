@@ -24,14 +24,13 @@ public class Planet extends FlyObject
    @Override
    public void paint(Graphics2D g2) {
 	   g2.drawImage(image, WC.LX+p.x*WC.SZ, WC.LY+p.y*WC.SZ, size*WC.SZ, size*WC.SZ, null);
-	   drawSelection(g2);
 	   drawInfo(g2);
    }
    
    
    private void loadImage(String baseFileName) {
 	   // TODO: reinitialize on side changed
-	   baseFileName += side == 0 ? "" : side == 1 ? "_r" : "_g";
+	   baseFileName += side == 0? "" : side == 1? "_r" : "_g";
 	   try { image = ImageIO.read(new File(baseFileName + ".png")); }
 	   catch (Exception e) { e.printStackTrace(); KissMyAsser.errorFound(); }
    }
